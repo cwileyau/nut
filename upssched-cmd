@@ -1,0 +1,33 @@
+EMAIL=`cat /etc/pve/user.cfg | grep root | awk '{split($0,a,":"); print a[7]}'`
+PROXMOXHOST=$(uname -n)
+
+ case $1 in
+       onbatt)
+          logger -t upssched-cmd "UPS on battery"
+          /usr/sbin/upsmon -c fsd
+          ;;
+        commbad_message)
+          echo "UPS is not connected" | mailx -s "Proxmox ($PROXMOXHOST): UPS Warning" $EMAIL
+          ;;
+        online)
+          logger -t upssched-cmd "UPS Online"
+          ;;
+        commok_message)
+          echo "UPS is connected again" | mailx -s "Proxmox ($PROXMOXHOST): UPS Warning" $EMAIL
+          ;;
+        nocomm_message)
+          echo "UPS is not reachable" | mailx -s "Proxmox ($PROXMOXHOST): UPS Warning" $EMAIL
+          ;;
+        shutdowncritical)
+          logger -t upssched-cmd "UPS on battery critical, forced shutdown"
+          ;;
+        upsgone)
+          logger -t upssched-cmd "UPS has been gone too long, can't reach"
+          ;;
+        shutdown_message)
+          echo "Proxmox shutdown" | mailx -s "Promox ($PROXMOXHOST): UPS Warning" $EMAIL
+          ;;
+       *)
+          logger -t upssched-cmd "Unrecognized command: $1"
+          ;;
+ esac
